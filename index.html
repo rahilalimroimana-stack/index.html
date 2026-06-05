@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANSSI - Plateforme Nationale de Notification</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            border-radius: 4px;
+            padding: 40px 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            border-top: 4px solid #0055a5;
+            position: relative;
+        }
+
+        /* --- PHASES GOUVERNEMENTALES --- */
+        .marianne-logo {
+            width: 60px;
+            margin-bottom: 20px;
+        }
+        .institution-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: #0055a5;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        h1 {
+            font-size: 1.3rem;
+            color: #0f172a;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .notice-text {
+            font-size: 0.85rem;
+            color: #475569;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #94a3b8;
+            border-radius: 2px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .btn-submit {
+            width: 100%;
+            background: #0055a5;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        /* --- APPAREIL COMPROMIS (AUSTÈRE ET SÉRIEUX) --- */
+        .incident-screen {
+            display: none;
+            text-align: left;
+        }
+        .alert-header {
+            background: #7f1d1d;
+            color: #fef2f2;
+            padding: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+        }
+        .data-table tr {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .data-table td {
+            padding: 10px 5px;
+        }
+        .td-label {
+            font-weight: bold;
+            color: #64748b;
+            width: 40%;
+        }
+        .td-value {
+            font-family: monospace;
+            color: #0f172a;
+            word-break: break-all;
+        }
+        .critical-value {
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .console-box {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            height: 130px;
+            overflow: hidden;
+            border-radius: 2px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .btn-emergency {
+            width: 100%;
+            background: #1e293b;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .resolution-box {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app-card">
+        <div id="panel-start">
+            <div class="institution-title">République Française</div>
+            <div style="font-size: 0.65rem; color: #64748b; margin-bottom: 15px;">ANSSI • CERT-FR / PROTOCOLE DE SÉCURITÉ</div>
+            <h1>Vérification d'Indexation des Données d'État Civil</h1>
+            <p class="notice-text">Conformément aux directives de sécurité publique, ce portail permet d'analyser si vos identifiants ANTS et CAF font l'objet d'une fuite active sur les réseaux d'échange non sécurisés.</p>
+            
+            <input type="text" id="user-lastname" class="form-input" placeholder="NOM DE FAMILLE">
+            <input type="text" id="user-firstname" class="form-input" placeholder="PRÉNOM">
+            <button class="btn-submit" onclick="executerProtocole()">Lancer le diagnostic de conformité</button>
+        </div>
+
+        <div id="panel-incident" class="incident-screen">
+            <div class="alert-header">
+                [ALERTE SÉCURITÉ CRITIQUE]<br>
+                VOTRE TERMINAL NAVIGATEUR COMMUNIQUE AVEC UN SERVEUR TIERS.
+            </div>
+
+            <table class="data-table">
+                <tr>
+                    <td class="td-label">Identité détectée</td>
+                    <td class="td-value" id="lbl-identity">-</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Adresse IP Publique</td>
+                    <td class="td-value critical-value" id="lbl-ip">Détection...</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Fournisseur d'accès</td>
+                    <td class="td-value" id="lbl-isp">Détection...</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Localisation Réseau</td>
+                    <td class="td-value" id="lbl-geo">Détection...</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Fichier Source Détecté</td>
+                    <td class="td-value critical-value">ANTS_part_004.jsonl</td>
+                </tr>
+                <tr>
+                    <td class="td-label">Statut Mémoire</td>
+                    <td class="td-value critical-value">BUFFER_OVERFLOW_EXPOSED</td>
+                </tr>
+            </table>
+
+            <div class="console-box" id="console-stream"></div>
+
+            <button class="btn-emergency" id="btn-kill" onclick="stopperSimulation()">Générer le rapport de remédiation</button>
+
+            <div class="resolution-box" id="panel-resolution">
+                <strong style="color: #059669; font-size: 0.95rem;">Fin de l'exercice de sensibilisation 🛑</strong><br><br>
+                Ce site n'appartient pas à l'ANSSI. Il s'agit d'une simulation d'<strong>ingénierie sociale avancée</strong> visant à démontrer l'importance de la vigilance numérique.<br><br>
+                <strong>Ce qu'il faut retenir :</strong><br>
+                • Les attaquants copient l'exactitude des termes officiels pour neutraliser votre esprit critique.<br>
+                • Sans aucune faille informatique, un simple site web de confiance peut obtenir votre **adresse IP**, votre **ville**, votre **opérateur**, bloquer vos touches de clavier et simuler le vol de vos fichiers.<br><br>
+                Ne saisissez jamais vos informations d'identité sur un lien reçu par SMS ou e-mail.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Neutralisation des actions utilisateur (Contrôle psychologique)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('keydown', event => {
+            if (event.ctrlKey && (event.key === 'u' || event.key === 's' || event.key === 'i')) {
+                event.preventDefault();
+            }
+        });
+
+        let systemInfo = { ip: "192.168.1.102", org: "Fai_Routage_Local", city: "Inconnue", region: "France" };
+        
+        // Récupération réelle des données réseaux en arrière-plan
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                systemInfo.ip = data.ip || "192.168.1.102";
+                systemInfo.org = data.org || "Réseau Mobile Détecté";
+                systemInfo.city = data.city || "Région Établie";
+                systemInfo.region = data.region || "France";
+            });
+
+        function executerProtocole() {
+            const nom = document.getElementById('user-lastname').value.trim().toUpperCase();
+            const prenom = document.getElementById('user-firstname').value.trim().toUpperCase();
+
+            if (!nom) {
+                alert("Action Requise : Veuillez renseigner le champ Nom de famille.");
+                return;
+            }
+
+            // Passage en plein écran automatique pour isoler le regard
+            const doc = document.documentElement;
+            if (doc.requestFullscreen) doc.requestFullscreen();
+            else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+
+            // Remplissage de la table d'incidents
+            document.getElementById('lbl-identity').innerText = nom + " " + (prenom || "");
+            document.getElementById('lbl-ip').innerText = systemInfo.ip;
+            document.getElementById('lbl-isp').innerText = systemInfo.org;
+            document.getElementById('lbl-geo').innerText = systemInfo.city + " (" + systemInfo.region + ")";
+
+            // Basculement d'interface
+            document.getElementById('panel-start').style.display = "none";
+            document.getElementById('panel-incident').style.display = "block";
+            document.getElementById('app-card').style.borderTop = "4px solid #7f1d1d";
+
+            if (navigator.vibrate) {
+                setInterval(() => { navigator.vibrate([150, 50, 150]); }, 2000);
+            }
+
+            injecterLogsSérieux(nom);
+        }
+
+        function injecterLogsSérieux(nom) {
+            const box = document.getElementById('console-stream');
+            const lines = [
+                `[INFO] Initializing memory verification sequence...`,
+                `[INFO] Mapping browser session tokens (SessionID: ${Math.floor(Math.random()*90000+10000)}).`,
+                `[WARN] Unencrypted registry mismatch detected in ANTS_part_004.jsonl`,
+                `[CRIT] Matching element discovered for reference: ${nom}`,
+                `[INFO] Hooking local subsystem networking table...`,
+                `[INFO] Active remote tunnel identified via port 443.`,
+                `[CRIT] Extracting volatile stack frame pointer...`,
+                `[DATA] 0x7FFF5FBFF608 : Dumping local cookies / cache...`,
+                `[DATA] 0x7FFF5FBFF610 : Saved credentials state: READ_EXPOSED`,
+                `[WARN] Persistent outbound sync active. Interception recommended.`
+            ];
+
+            let index = 0;
+            const timer = setInterval(() => {
+                if (index < lines.length) {
+                    const div = document.createElement('div');
+                    div.innerText = lines[index];
+                    if (lines[index].includes('CRIT')) div.style.color = '#ef4444';
+                    if (lines[index].includes('WARN')) div.style.color = '#f59e0b';
+                    box.appendChild(div);
+                    box.scrollTop = box.scrollHeight;
+                    index++;
+                } else {
+                    clearInterval(timer);
+                    // Génération continue de requêtes de vidage mémoire
+                    setInterval(() => {
+                        const div = document.createElement('div');
+                        const randomHex = Math.floor(Math.random()*16777215).toString(16).toUpperCase();
+                        div.innerText = `[SYNC] Syncing block 0x${randomHex} to master node... OK`;
+                        box.appendChild(div);
+                        box.scrollTop = box.scrollHeight;
+                    }, 500);
+                }
+            }, 800);
+        }
+
+        function stopperSimulation() {
+            if (navigator.vibrate) navigator.vibrate(0);
+            
+            // Forcer le téléchargement automatique de la fausse alerte textuelle de blague
+            const texteBlague = "--- RAPPORT DE SECURITE NUMERIQUE ---\n\nTu as ete piege ! Ce site web est une simulation de sensibilisation a l'ingenierie sociale.\n\nFais attention aux liens sur lesquels tu cliques !";
+            const blob = new Blob([texteBlague], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "ALERTE_ANSSI_SIMULATION.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Révéler le texte pédagogique
+            document.getElementById('panel-resolution').style.display = "block";
+            document.getElementById('btn-kill').style.display = "none";
+            document.getElementById('console-stream').style.height = "70px";
+        }
+    </script>
+</body>
+</html>
